@@ -65,23 +65,23 @@ button{cursor:pointer}
 #fingerBtn{font-size:13px;gap:6px}
 
 #scroller{flex:1;overflow:auto;padding:20px 16px 80px;-webkit-overflow-scrolling:touch}
-#sheet{--pt:40px;position:relative;max-width:900px;margin:0 auto;background-color:#fffffe;color:#171a22;border-radius:3px;box-shadow:0 1px 2px rgba(0,0,0,.14),0 10px 32px rgba(0,0,0,.1);
+#sheet{--s:1;--f:30;--lh:calc(var(--f) * 1.78 * var(--s) * 1px);--pt:calc(40 * var(--s) * 1px);position:relative;max-width:900px;margin:0 auto;background-color:#fffffe;color:#171a22;border-radius:3px;box-shadow:0 1px 2px rgba(0,0,0,.14),0 10px 32px rgba(0,0,0,.1);
   -webkit-print-color-adjust:exact;print-color-adjust:exact}
-#sheet[data-bg=lines]{background-image:linear-gradient(to bottom,transparent 31px,#d3dcef 31px);background-size:100% 32px;background-position:0 var(--pt)}
-#sheet[data-bg=grid]{background-image:linear-gradient(to bottom,transparent 31px,#dfe5f2 31px),linear-gradient(to right,transparent 31px,#dfe5f2 31px);background-size:32px 32px;background-position:0 var(--pt)}
-#sheet[data-bg=dots]{background-image:radial-gradient(circle,#b4bed5 1.3px,transparent 1.7px);background-size:32px 32px;background-position:16px calc(var(--pt) + 16px)}
-#text{outline:0;padding:var(--pt) 48px 80px;min-height:var(--sh,1400px);font:18px/32px Charter,"Bitstream Charter","Sitka Text",Cambria,Georgia,serif;white-space:pre-wrap;word-break:break-word;caret-color:#2446d1}
+#sheet[data-bg=lines]{background-image:linear-gradient(to bottom,transparent calc(var(--lh) - 1px),#d3dcef calc(var(--lh) - 1px));background-size:100% var(--lh);background-position:0 var(--pt)}
+#sheet[data-bg=grid]{background-image:linear-gradient(to bottom,transparent calc(var(--lh) - 1px),#dfe5f2 calc(var(--lh) - 1px)),linear-gradient(to right,transparent calc(var(--lh) - 1px),#dfe5f2 calc(var(--lh) - 1px));background-size:var(--lh) var(--lh);background-position:0 var(--pt)}
+#sheet[data-bg=dots]{background-image:radial-gradient(circle,#b4bed5 1.3px,transparent 1.7px);background-size:var(--lh) var(--lh);background-position:calc(var(--lh) / 2) calc(var(--pt) + var(--lh) / 2)}
+#text{outline:0;padding:var(--pt) calc(48 * var(--s) * 1px) calc(80 * var(--s) * 1px);min-height:var(--sh,1400px);font-family:Charter,"Bitstream Charter","Sitka Text",Cambria,Georgia,serif;font-size:calc(var(--f) * var(--s) * 1px);line-height:var(--lh);text-rendering:geometricPrecision;-webkit-text-size-adjust:100%;text-size-adjust:100%;white-space:pre-wrap;word-break:break-word;caret-color:#2446d1}
 #text.empty::before{content:attr(data-ph);color:#9aa3b8;pointer-events:none}
 #text div,#text p{margin:0}
-#text h2{font-size:24px;line-height:32px;margin:0;font-weight:700}
+#text h2{font-size:calc(var(--f) * 1.3 * var(--s) * 1px);line-height:var(--lh);margin:0;font-weight:700}
 #text ul,#text ol{margin:0;padding-left:1.5em}
-#text li{line-height:32px}
+#text li{line-height:var(--lh)}
 #ink{position:absolute;inset:0;width:100%;height:100%;touch-action:none;pointer-events:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #live{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 body[data-mode=draw] #ink{pointer-events:auto}
 body[data-mode=draw] #text{-webkit-user-select:none;user-select:none}
 
-#menu{position:fixed;right:12px;top:calc(56px + env(safe-area-inset-top));z-index:20;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.25);min-width:230px;padding:6px;display:none}
+#menu{position:fixed;right:12px;top:calc(56px + env(safe-area-inset-top));z-index:20;max-height:calc(100vh - 72px);max-height:calc(100dvh - 72px);overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.25);min-width:230px;padding:6px;display:none}
 #menu.open{display:block}
 #menu .mi{display:block;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:11px 12px}
 #menu .mi:hover{background:var(--hover)}
@@ -92,13 +92,11 @@ body[data-mode=draw] #text{-webkit-user-select:none;user-select:none}
 #toast{position:fixed;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translate(-50%,20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:.2s;z-index:30;max-width:90vw}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 
-@media (max-width:760px){
+@media (max-width:760px),(max-height:520px){
   #app{grid-template-columns:1fr}
   body.view-list #main{display:none}
   body.view-edit #side{display:none}
   .only-mobile{display:inline-flex}
-  #sheet{--pt:28px}
-  #text{padding-left:20px;padding-right:20px;font-size:17px}
   #scroller{padding:10px 8px 80px}
   .bar{gap:4px;padding-left:6px;padding-right:6px}
 }
@@ -180,6 +178,10 @@ body[data-mode=draw] #text{-webkit-user-select:none;user-select:none}
   <div class="seg" id="bgSeg">
     <button data-bg="lines">Lignes</button><button data-bg="grid">Grille</button><button data-bg="dots">Points</button><button data-bg="blank">Vierge</button>
   </div>
+  <div class="lab">Taille du texte</div>
+  <div class="seg" id="fsSeg">
+    <button data-fs="24">Petit</button><button data-fs="32">Moyen</button><button data-fs="42">Grand</button>
+  </div>
   <button class="mi" id="addPage">Ajouter une page</button>
   <button class="mi" id="printBtn">Imprimer / enregistrer en PDF</button>
   <button class="mi" id="exportBtn">Sauvegarder toutes les notes</button>
@@ -234,7 +236,7 @@ const dbDel = id => new Promise((res, rej) => { const q = store('readwrite').del
 let notes = [], cur = null, mode = 'text', saveT = 0;
 let ustack = [], rstack = [], live = null, active = null, scrolling = null, erasing = null, penSeen = false, raf = 0;
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-const newNote = () => ({id:uid(), title:'', html:'', text:'', strokes:[], bg:'lines', h:1400, created:Date.now(), updated:Date.now()});
+const newNote = () => ({id:uid(), title:'', html:'', text:'', strokes:[], bg:'lines', h:1400, fs:(Math.min(innerWidth, innerHeight) < 600 ? 40 : 30), created:Date.now(), updated:Date.now()});
 const text = $('#text'), sheet = $('#sheet'), cvs = $('#ink'), ctx = cvs.getContext('2d'), scroller = $('#scroller');
 const lv = $('#live'), lctx = lv.getContext('2d');
 let ls = {n:0}, dirtyInk = false;
@@ -391,6 +393,7 @@ const K = () => cvs.width / W;                 // pixels bitmap par unité logiq
 function setVar(){
   if (!cur) return;
   const s = sheet.clientWidth / W || 1;
+  sheet.style.setProperty('--s', s); sheet.style.setProperty('--f', cur.fs || 30);
   sheet.style.setProperty('--sh', Math.round(cur.h * s) + 'px');
 }
 function resizeCanvas(){
@@ -552,12 +555,17 @@ const menu = $('#menu');
 $('#menuBtn').onclick = e => {
   e.stopPropagation();
   $$('#bgSeg button').forEach(b => b.setAttribute('aria-pressed', cur && b.dataset.bg === cur.bg));
+  $$('#fsSeg button').forEach(b => b.setAttribute('aria-pressed', !!cur && Math.abs(+b.dataset.fs - cur.fs) < 4));
   menu.classList.toggle('open');
 };
 document.addEventListener('click', e => { if (!menu.contains(e.target)) menu.classList.remove('open'); });
 $('#bgSeg').addEventListener('click', e => {
   const b = e.target.closest('button[data-bg]'); if (!b || !cur) return;
   cur.bg = b.dataset.bg; sheet.dataset.bg = cur.bg; changed(); menu.classList.remove('open');
+});
+$('#fsSeg').addEventListener('click', e => {
+  const b = e.target.closest('button[data-fs]'); if (!b || !cur) return;
+  cur.fs = +b.dataset.fs; setVar(); changed(); menu.classList.remove('open');
 });
 $('#addPage').onclick = () => {
   if (!cur) return; cur.h += 1000; setVar(); changed(); menu.classList.remove('open');
@@ -590,7 +598,7 @@ function cleanNote(n){
     pts:(Array.isArray(s.pts) ? s.pts : []).filter(p => Array.isArray(p) && Number.isFinite(+p[0]) && Number.isFinite(+p[1])).map(p => [+p[0], +p[1], p[2] == null ? .5 : num(p[2], .5, 0, 1)])
   })).filter(s => s.pts.length);
   return {id:String(n.id || uid()).slice(0, 40), title:String(n.title || '').slice(0, 200), html, text:tmp.textContent,
-    strokes, bg:['lines', 'grid', 'dots', 'blank'].includes(n.bg) ? n.bg : 'lines', h:num(n.h, 1400, 600, 60000),
+    strokes, bg:['lines', 'grid', 'dots', 'blank'].includes(n.bg) ? n.bg : 'lines', h:num(n.h, 1400, 600, 60000), fs:num(n.fs, 18, 14, 64),
     created:num(n.created, Date.now(), 0, 9e15), updated:num(n.updated, Date.now(), 0, 9e15)};
 }
 $('#importFile').addEventListener('change', async e => {
@@ -617,14 +625,14 @@ if (navigator.storage && navigator.storage.persist) navigator.storage.persist().
 
 /* ---------- démarrage ---------- */
 (async () => {
-  try { db = await openDB(); notes = (await dbAll()).map(n => Object.assign(newNote(), n)); }
+  try { db = await openDB(); notes = (await dbAll()).map(n => Object.assign(newNote(), {fs:18}, n)); }
   catch (e) { toast('Stockage local indisponible : les notes ne seront pas conservées.'); }
   markTools();
   if (!notes.length) createNote();
   else {
     renderList();
     const last = notes.find(n => n.id === set.last);
-    if (last && matchMedia('(min-width:761px)').matches) openNote(last.id);
+    if (last && matchMedia('(min-width:761px) and (min-height:521px)').matches) openNote(last.id);
   }
 })();
 </script>
