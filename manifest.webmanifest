@@ -1,0 +1,17 @@
+{
+  "name": "MattNotes",
+  "short_name": "MattNotes",
+  "description": "Prise de notes : clavier, stylet et dessin manuscrit.",
+  "lang": "fr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#e8ebf1",
+  "theme_color": "#2446d1",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
