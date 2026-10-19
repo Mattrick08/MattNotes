@@ -236,7 +236,7 @@ let ustack = [], rstack = [], live = null, active = null, scrolling = null, eras
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 const newNote = () => ({id:uid(), title:'', html:'', text:'', strokes:[], bg:'lines', h:1400, created:Date.now(), updated:Date.now()});
 const text = $('#text'), sheet = $('#sheet'), cvs = $('#ink'), ctx = cvs.getContext('2d'), scroller = $('#scroller');
-const lv = $('#live'), lctx = lv.getContext('2d', {desynchronized:true});
+const lv = $('#live'), lctx = lv.getContext('2d');
 let ls = {n:0}, dirtyInk = false;
 
 let tt = 0;
