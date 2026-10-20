@@ -154,6 +154,40 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 #toast.act{pointer-events:auto}
 #toast button{background:none;border:0;color:inherit;font-weight:700;text-decoration:underline;margin-left:8px;padding:0}
 
+
+#tpl{position:absolute;left:0;top:0;width:100%;pointer-events:none;overflow:hidden;border-radius:3px}
+#tpl svg{display:block}
+#sheet[data-bg=seyes]{--lh:calc(34.2857 * var(--s) * 1px);--pt:calc(68.5714 * var(--s) * 1px)}
+#sheet[data-bg=seyes] #text{padding-left:calc(150 * var(--s) * 1px)}
+#sheet[data-bg=course],#sheet[data-bg=cornell]{--pt:calc(110 * var(--s) * 1px)}
+#sheet[data-bg=course] #text{padding-left:calc(130 * var(--s) * 1px)}
+#sheet[data-bg=cornell] #text{padding-left:calc(272 * var(--s) * 1px)}
+#text u{text-decoration:underline}
+#text a{color:#1f3fbf;text-decoration:underline}
+#text code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88em;background:#eef1f8;border-radius:.25em;padding:.05em .3em}
+#text .s-n{font-size:calc(var(--f) * var(--s) * 1px)}
+#text .s-sm{font-size:calc(var(--f) * .8 * var(--s) * 1px)}
+#text .s-lg{font-size:calc(var(--f) * 1.35 * var(--s) * 1px)}
+#text .s-xl{font-size:calc(var(--f) * 1.8 * var(--s) * 1px)}
+#text table.tb{border-collapse:collapse;width:100%;table-layout:fixed;margin:0}
+#text table.tb td,#text table.tb th{border:1px solid #b7c0d6;padding:0 .4em;vertical-align:top;word-break:break-word;min-width:2em;height:var(--lh);font-weight:400;text-align:inherit}
+#pop{min-width:0;padding:8px;max-width:calc(100vw - 16px)}
+#pop .pw{display:flex;flex-wrap:wrap;gap:6px;max-width:260px}
+#pop .sw{margin:0;border:1px solid var(--line)}
+#pop .mi{white-space:nowrap}
+.tplgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;margin:6px 0}
+.tplcard{border:2px solid var(--line);border-radius:10px;background:none;padding:6px;display:flex;flex-direction:column;align-items:center;gap:6px;font-weight:600}
+.tplcard svg{width:100%;height:auto;border:1px solid var(--line);background:#fff;display:block}
+.tplcard[aria-pressed=true]{border-color:var(--acc);background:var(--hover)}
+.vrow{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.vthumb{width:96px;height:128px;border:1px solid var(--line);border-radius:6px;background:#fffffe;flex:none}
+.vinfo{flex:1;min-width:0}
+.vt{font-weight:600}
+.vs,.vx{color:var(--mute);font-size:13px}
+.vx{margin:4px 0 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rowbtns{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.num{width:80px!important}
+
 @media (max-width:760px),(max-height:520px){
   #app{grid-template-columns:1fr}
   body.view-list #main{display:none}
@@ -209,10 +243,19 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
         <button class="ib t" data-cmd="bold" aria-label="Gras"><b>G</b></button>
         <button class="ib t" data-cmd="italic" aria-label="Italique"><i>I</i></button>
         <button class="ib t" data-cmd="strikeThrough" aria-label="Barré"><s>S</s></button>
+        <button class="ib t" data-cmd="underline" aria-label="Souligné"><u>U</u></button>
         <button class="ib t" data-cmd="h2" aria-label="Titre de section"><b>T</b></button>
         <button class="ib t" data-cmd="insertUnorderedList" aria-label="Liste à puces">•</button>
         <button class="ib t" data-cmd="insertOrderedList" aria-label="Liste numérotée">1.</button>
         <button class="ib" id="chkBtn" aria-label="Liste de tâches à cocher"></button>
+        <span class="sep"></span>
+        <button class="ib" id="colBtn" aria-label="Couleur du texte"></button>
+        <button class="ib" id="hiBtn" aria-label="Surligner"></button>
+        <button class="ib t" id="sizeBtn" aria-label="Taille du texte sélectionné">Aa</button>
+        <button class="ib" id="alignBtn" aria-label="Alignement du paragraphe"></button>
+        <button class="ib" id="linkBtn" aria-label="Lien"></button>
+        <button class="ib" id="tblBtn" aria-label="Tableau"></button>
+        <button class="ib t" id="codeBtn" aria-label="Code"><code>&lt;/&gt;</code></button>
         <span class="sep"></span>
         <button class="ib" id="imgBtn" aria-label="Insérer une image"></button>
         <button class="ib" id="eqBtn" aria-label="Insérer une équation"></button>
@@ -241,6 +284,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 
       <div id="scroller">
         <div id="sheet" data-bg="lines">
+          <div id="tpl"></div>
           <div id="bgl"></div>
           <div id="text" contenteditable="true" spellcheck="true" data-ph="Écris ici, ou passe en mode Dessin pour écrire au stylet."></div>
           <div id="objs"></div>
@@ -267,6 +311,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
   <div class="seg" id="fsSeg">
     <button data-fs="24">Petit</button><button data-fs="32">Moyen</button><button data-fs="42">Grand</button>
   </div>
+  <button class="mi" id="tplBtn">Modèles de page…</button>
   <button class="mi" id="pinBtn">Épingler</button>
   <button class="mi" id="moveBtn">Déplacer vers un dossier…</button>
   <hr>
@@ -275,6 +320,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
   <button class="mi" id="mBg">Importer un PDF ou une image comme fond</button>
   <button class="mi" id="mBgOff">Retirer les fonds importés</button>
   <button class="mi" id="addPage">Ajouter une page</button>
+  <button class="mi" id="histBtn">Historique des versions…</button>
   <hr>
   <button class="mi" id="expPng">Exporter en image (PNG)</button>
   <button class="mi" id="expPdf">Exporter en PDF</button>
@@ -282,6 +328,8 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
   <hr>
   <button class="mi danger" id="delBtn">Mettre à la corbeille</button>
 </div>
+
+<div id="pop" class="menu" role="menu"></div>
 
 <div id="gmenu" class="menu" role="menu">
   <button class="mi" id="gSync">Synchroniser maintenant</button>
@@ -347,11 +395,12 @@ const saveSet = () => { try { localStorage.setItem('mattnotes.set', JSON.stringi
 /* ---------- stockage IndexedDB ---------- */
 let db = null;
 const openDB = () => new Promise((res, rej) => {
-  const r = indexedDB.open('mattnotes', 2);
+  const r = indexedDB.open('mattnotes', 3);
   r.onupgradeneeded = () => {
     const d = r.result;
     if (!d.objectStoreNames.contains('notes')) d.createObjectStore('notes', {keyPath:'id'});
     if (!d.objectStoreNames.contains('files')) d.createObjectStore('files', {keyPath:'id'});
+    if (!d.objectStoreNames.contains('versions')) d.createObjectStore('versions', {keyPath:'id'}).createIndex('nid', 'nid');
   };
   r.onsuccess = () => res(r.result);
   r.onerror = () => rej(r.error);
@@ -404,6 +453,7 @@ function toast(m, act){
 
 function saveNote(n){
   if (db) dbPut(n).then(() => { if (window.scheduleSync) scheduleSync(); }).catch(() => toast('Échec de l’enregistrement sur cet appareil.'));
+  if (db && !n.purged && !n.deleted) snapshot(n, '', 10 * 60e3);
 }
 function commit(){ if (cur){ clearTimeout(saveT); saveNote(cur); } }
 function changed(){ if (!cur) return; cur.updated = Date.now(); clearTimeout(saveT); saveT = setTimeout(() => { saveNote(cur); renderList(); }, 400); }
@@ -430,8 +480,19 @@ function modal(title, build, actions){
 }
 
 /* ---------- HTML sûr ---------- */
-const OK = new Set(['B','STRONG','I','EM','U','S','STRIKE','H2','UL','OL','LI','DIV','P','BR','SPAN']);
+const OK = new Set(['B','STRONG','I','EM','U','S','STRIKE','H2','UL','OL','LI','DIV','P','BR','SPAN','A','CODE','TABLE','TBODY','THEAD','TR','TD','TH']);
 const DROP = new Set(['SCRIPT','STYLE','IFRAME','OBJECT','EMBED','LINK','META','SVG','MATH','TEMPLATE']);
+const COLOR_RE = /^(#[0-9a-f]{3,8}|rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*(,\s*[\d.]+\s*)?\)|transparent|[a-z]{3,20})$/i;
+function cleanStyle(str){
+  const out = [];
+  String(str).split(';').forEach(d => {
+    const i = d.indexOf(':'); if (i < 0) return;
+    const p = d.slice(0, i).trim().toLowerCase(), v = d.slice(i + 1).trim();
+    if ((p === 'color' || p === 'background-color') && COLOR_RE.test(v)) out.push(p + ': ' + v);
+    else if (p === 'text-align' && /^(left|center|right|justify)$/i.test(v)) out.push(p + ': ' + v.toLowerCase());
+  });
+  return out.join('; ');
+}
 function sanitize(html){
   const t = document.createElement('template'); t.innerHTML = String(html || '');
   (function walk(n){
@@ -441,10 +502,17 @@ function sanitize(html){
         if (!OK.has(c.tagName)){
           if (DROP.has(c.tagName.toUpperCase())) c.remove(); else c.replaceWith(...c.childNodes);
         } else {
-          const cls = c.getAttribute('class') || '';
+          const cls = c.getAttribute('class') || '', st = c.getAttribute('style') || '', href = c.getAttribute('href') || '';
           [...c.attributes].forEach(a => c.removeAttribute(a.name));
           if (c.tagName === 'DIV' && /^chk( done)?$/.test(cls)) c.className = cls;
           else if (c.tagName === 'SPAN' && cls === 'cb') c.className = 'cb';
+          else if (c.tagName === 'SPAN' && /^s-(n|sm|lg|xl)$/.test(cls)) c.className = cls;
+          else if (c.tagName === 'TABLE' && cls === 'tb') c.className = 'tb';
+          const cs = cleanStyle(st); if (cs) c.setAttribute('style', cs);
+          if (c.tagName === 'A'){
+            if (/^(https?:|mailto:|tel:)/i.test(href.trim())){ c.setAttribute('href', href.trim()); c.setAttribute('target', '_blank'); c.setAttribute('rel', 'noopener noreferrer'); }
+            else c.replaceWith(...c.childNodes);
+          }
         }
       } else if (c.nodeType !== 3) c.remove();
     });
@@ -473,7 +541,7 @@ function cleanNote(n){
   }).filter(Boolean);
   const bgs = (Array.isArray(n.bgs) ? n.bgs : []).map(b => b && typeof b === 'object' ? {fid:id(b.fid), y:num(b.y, 0, 0, 80000), h:num(b.h, 1200, 20, 20000)} : null).filter(Boolean);
   return {id:id(n.id), title:String(n.title || '').slice(0, 200), html, text:tmp.textContent,
-    strokes, objs, bgs, bg:['lines', 'grid', 'dots', 'blank'].includes(n.bg) ? n.bg : 'lines', h:num(n.h, 1400, 600, 80000), fs:num(n.fs, 18, 14, 64),
+    strokes, objs, bgs, bg:['lines', 'grid', 'dots', 'blank', 'seyes', 'axes', 'cornell', 'course'].includes(n.bg) ? n.bg : 'lines', h:num(n.h, 1400, 600, 80000), fs:num(n.fs, 18, 14, 64),
     pin:!!n.pin, folder:String(n.folder || '').slice(0, 60), deleted:num(n.deleted, 0, 0, 9e15), purged:!!n.purged,
     created:num(n.created, Date.now(), 0, 9e15), updated:num(n.updated, Date.now(), 0, 9e15)};
 }
@@ -561,6 +629,7 @@ function purgeNote(n){
   if (cur && cur.id === n.id) closeEditor();
   saveNote(n);
   if (db) fids.forEach(id => { fDel(id).catch(() => {}); if (furl[id]){ URL.revokeObjectURL(furl[id]); delete furl[id]; } });
+  purgeVersions(n.id);
 }
 function autoPurge(){
   notes.forEach(n => { if (!n.purged && n.deleted && Date.now() - n.deleted > 30 * DAY) purgeNote(n); });
@@ -640,11 +709,13 @@ function closeEditor(){
   showEditor(false); document.body.classList.remove('view-edit'); document.body.classList.add('view-list');
 }
 function openNote(id){
+  const prev = cur;
   commit(); clearSel(); deselectObj();
   const n = notes.find(x => x.id === id); if (!n || n.purged || n.deleted) return;
+  if (prev && prev !== n && db) snapshot(prev, '', 120e3);
   cur = n; set.last = id; saveSet();
   $('#title').value = n.title;
-  text.innerHTML = sanitize(n.html); fixChecks(); syncEmpty();
+  text.innerHTML = sanitize(n.html); fixChecks(); fixLinks(); syncEmpty();
   sheet.dataset.bg = n.bg;
   ustack = []; rstack = []; live = null; active = null; zoom = 1; lastEdit = 'text';
   showEditor(true);
@@ -662,7 +733,7 @@ function createNote(){
   if (matchMedia('(pointer:fine)').matches) setTimeout(() => $('#title').focus(), 0);
 }
 $('#newBtn').onclick = createNote;
-$('#backBtn').onclick = () => { commit(); document.body.classList.remove('view-edit'); document.body.classList.add('view-list'); renderList(); };
+$('#backBtn').onclick = () => { commit(); if (cur && db) snapshot(cur, '', 120e3); document.body.classList.remove('view-edit'); document.body.classList.add('view-list'); renderList(); };
 
 /* ---------- texte ---------- */
 function syncEmpty(){ text.classList.toggle('empty', !text.textContent.trim() && !text.querySelector('li,.chk')); }
@@ -682,6 +753,11 @@ function blockOf(node){
 }
 text.addEventListener('input', e => {
   if (!cur) return;
+  if (e.inputType === 'insertText'){
+    if (e.data === ' ') tryBlockShortcut();
+    else if (e.data === '*' || e.data === '`') tryInline(e.data);
+  }
+  stripZw(); fixLinks();
   if (text.querySelector('.chk, .cb')){
     fixChecks();
     if (e.inputType === 'insertParagraph'){
@@ -689,7 +765,7 @@ text.addEventListener('input', e => {
       if (b && b.nodeType === 1 && b.classList && b.classList.contains('chk')) b.classList.remove('done');
     }
   }
-  cur.html = text.innerHTML; cur.text = text.innerText; lastEdit = 'text'; syncEmpty(); changed();
+  cur.html = text.innerHTML; cur.text = text.innerText.replace(/\u200b/g, ''); lastEdit = 'text'; syncEmpty(); changed();
 });
 function textChanged(){ text.dispatchEvent(new Event('input')); }
 text.addEventListener('keydown', e => {
@@ -845,9 +921,9 @@ const K = () => cvs.width / W;                 // pixels bitmap par unité logiq
 function setVar(){
   if (!cur) return;
   const s = curS();
-  sheet.style.setProperty('--s', s); sheet.style.setProperty('--f', cur.fs || 30);
+  sheet.style.setProperty('--s', s); sheet.style.setProperty('--f', (cur.fs || 30) * (cur.bg === 'seyes' ? .62 : 1));
   sheet.style.setProperty('--sh', Math.round(cur.h * s) + 'px');
-  updateSelUI();
+  renderTpl(); updateSelUI();
 }
 function resizeCanvas(){
   const w = sheet.clientWidth, h = sheet.clientHeight;
@@ -1541,13 +1617,16 @@ $('#menuBtn').onclick = e => {
 };
 $('#gmenuBtn').onclick = e => { e.stopPropagation(); menu.classList.remove('open'); gmenu.classList.toggle('open'); };
 document.addEventListener('click', e => { if (!menu.contains(e.target) && !gmenu.contains(e.target)) closeMenus(); });
+document.addEventListener('scroll', () => { if (typeof closePop === 'function') closePop(); }, true);
 $('#bgSeg').addEventListener('click', e => {
   const b = e.target.closest('button[data-bg]'); if (!b || !cur) return;
-  cur.bg = b.dataset.bg; sheet.dataset.bg = cur.bg; changed(); closeMenus();
+  setTemplate(b.dataset.bg); closeMenus();
 });
+$('#tplBtn').onclick = () => { closeMenus(); tplDialog(); };
+$('#histBtn').onclick = () => { closeMenus(); historyDialog(); };
 $('#fsSeg').addEventListener('click', e => {
   const b = e.target.closest('button[data-fs]'); if (!b || !cur) return;
-  cur.fs = +b.dataset.fs; setVar(); changed(); closeMenus();
+  cur.fs = +b.dataset.fs; tplKey = ''; setVar(); changed(); closeMenus();
 });
 $('#pinBtn').onclick = () => { if (!cur) return; cur.pin = !cur.pin; changed(); closeMenus(); renderList(); };
 $('#moveBtn').onclick = () => { closeMenus(); moveDialog(); };
@@ -1557,8 +1636,7 @@ $('#mBg').onclick = () => { closeMenus(); $('#bgFile').click(); };
 $('#mBgOff').onclick = () => {
   closeMenus(); if (!cur || !cur.bgs.length) return;
   if (!confirm('Retirer les pages PDF / images de fond de cette note ? Ton texte et tes dessins sont conservés.')) return;
-  const fids = cur.bgs.map(b => b.fid); cur.bgs = []; renderBgs(); changed();
-  if (db) fids.forEach(id => { if (!noteFileIds(cur).includes(id)){ fDel(id).catch(() => {}); if (furl[id]){ URL.revokeObjectURL(furl[id]); delete furl[id]; } } });
+  cur.bgs = []; renderBgs(); changed();       // les fichiers restent disponibles pour l'historique des versions
 };
 $('#addPage').onclick = () => {
   if (!cur) return; cur.h += 1000; setVar(); changed(); closeMenus();
@@ -1804,6 +1882,7 @@ async function syncOnce(){
 }
 async function applyRemote(n){
   const i = notes.findIndex(x => x.id === n.id);
+  if (i >= 0 && !n.purged) await snapshot(notes[i], 'Avant synchronisation', 0);
   if (i >= 0) notes[i] = n; else notes.push(n);
   if (db) await dbPut(n);
   if (cur && cur.id === n.id){
@@ -1866,6 +1945,473 @@ function syncDialog(){
       runSync(true);
     }}
   ]);
+}
+
+/* ---------- modèles de page ---------- */
+const TPL = [
+  {id:'lines', name:'Lignes'}, {id:'grid', name:'Grille'}, {id:'dots', name:'Points'}, {id:'blank', name:'Vierge'},
+  {id:'seyes', name:'Seyès'}, {id:'axes', name:'Repère'}, {id:'cornell', name:'Cornell'}, {id:'course', name:'Cours'}
+];
+const SVG_TPL = ['seyes', 'axes', 'cornell', 'course'];     // dessinés en SVG ; les autres le sont en CSS
+const SY = 34.2857;                                          // 8 mm en unités de page (900 unités = 21 cm)
+const lineGap = fs => fs * 1.78;
+
+function tplInner(bg, fs, H, p){
+  const L = lineGap(fs || 30);
+  const T = (x, y, t) => '<text x="' + x + '" y="' + y + '" font-family="system-ui,sans-serif" font-size="13" fill="#9aa3b8">' + t + '</text>';
+  const box = (x, y, w, h) => '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="8" fill="none" stroke="#c5cde3" stroke-width="1.5"/>';
+  const ruled = (x, w) =>
+    '<defs><pattern id="' + p + 'r" width="' + w + '" height="' + L + '" patternUnits="userSpaceOnUse"><path d="M0 ' + (L - .5) + 'H' + w + '" stroke="#d3dcef" stroke-width="1.2" fill="none"/></pattern></defs>' +
+    '<g transform="translate(' + x + ',110)"><rect width="' + w + '" height="' + Math.max(0, H - 110) + '" fill="url(#' + p + 'r)"/></g>';
+  switch (bg){
+    case 'lines':
+      return '<defs><pattern id="' + p + 'l" width="900" height="' + L + '" patternUnits="userSpaceOnUse"><path d="M0 ' + (L - .5) + 'H900" stroke="#d3dcef" stroke-width="1.2" fill="none"/></pattern></defs>' +
+        '<g transform="translate(0,40)"><rect width="900" height="' + H + '" fill="url(#' + p + 'l)"/></g>';
+    case 'grid':
+      return '<defs><pattern id="' + p + 'g" width="' + L + '" height="' + L + '" patternUnits="userSpaceOnUse"><path d="M' + L + ' 0H0V' + L + '" stroke="#dfe5f2" stroke-width="1.2" fill="none"/></pattern></defs>' +
+        '<g transform="translate(0,40)"><rect width="900" height="' + H + '" fill="url(#' + p + 'g)"/></g>';
+    case 'dots':
+      return '<defs><pattern id="' + p + 'd" width="' + L + '" height="' + L + '" patternUnits="userSpaceOnUse"><circle cx="' + L / 2 + '" cy="' + L / 2 + '" r="1.7" fill="#b4bed5"/></pattern></defs>' +
+        '<g transform="translate(0,40)"><rect width="900" height="' + H + '" fill="url(#' + p + 'd)"/></g>';
+    case 'seyes': {
+      const m = SY / 4;
+      return '<defs><pattern id="' + p + 's" width="' + SY + '" height="' + SY + '" patternUnits="userSpaceOnUse">' +
+        '<path d="M0 ' + m + 'H' + SY + 'M0 ' + 2 * m + 'H' + SY + 'M0 ' + 3 * m + 'H' + SY + '" stroke="#e8def3" stroke-width=".9" fill="none"/>' +
+        '<path d="M0 0H' + SY + '" stroke="#c9b3e0" stroke-width="1.3" fill="none"/>' +
+        '<path d="M0 0V' + SY + '" stroke="#d6c5e9" stroke-width="1" fill="none"/></pattern></defs>' +
+        '<rect width="900" height="' + H + '" fill="url(#' + p + 's)"/>' +
+        '<path d="M' + 4 * SY + ' 0V' + H + '" stroke="#e56b6f" stroke-width="1.6" fill="none"/>';
+    }
+    case 'axes': {
+      const A = 1260;
+      return '<defs>' +
+        '<pattern id="' + p + 'a" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0V30" fill="none" stroke="#dfe5f2" stroke-width="1"/></pattern>' +
+        '<pattern id="' + p + 'b" width="150" height="150" patternUnits="userSpaceOnUse"><path d="M150 0H0V150" fill="none" stroke="#c3cde8" stroke-width="1.4"/></pattern>' +
+        '<pattern id="' + p + 'c" width="900" height="' + A + '" patternUnits="userSpaceOnUse">' +
+        '<g stroke="#3a4560" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M30 630H870M860 624L870 630L860 636"/><path d="M450 1230V30M444 40L450 30L456 40"/></g>' +
+        '<g font-family="system-ui,sans-serif" font-size="16" font-style="italic" fill="#3a4560"><text x="874" y="622">x</text><text x="460" y="44">y</text><text x="434" y="650">O</text></g>' +
+        '</pattern></defs>' +
+        '<rect width="900" height="' + H + '" fill="url(#' + p + 'a)"/><rect width="900" height="' + H + '" fill="url(#' + p + 'b)"/><rect width="900" height="' + H + '" fill="url(#' + p + 'c)"/>';
+    }
+    case 'cornell':
+      return ruled(250, 650) + box(24, 20, 852, 66) + '<path d="M620 20V86" stroke="#c5cde3" stroke-width="1.5"/>' + T(40, 42, 'Sujet') + T(636, 42, 'Date') +
+        '<path d="M0 100H900" stroke="#c5cde3" stroke-width="1.5"/><path d="M250 100V' + H + '" stroke="#e56b6f" stroke-width="1.6"/>' + T(24, 126, 'Mots-clés / questions');
+    case 'course':
+      return ruled(0, 900) + box(24, 20, 852, 66) + '<path d="M330 20V86M690 20V86" stroke="#c5cde3" stroke-width="1.5"/>' +
+        T(40, 42, 'Matière') + T(346, 42, 'Chapitre') + T(706, 42, 'Date') + '<path d="M110 100V' + H + '" stroke="#e56b6f" stroke-width="1.6"/>';
+    default: return '';
+  }
+}
+
+let tplKey = '';
+function renderTpl(){
+  const el = $('#tpl'); if (!el) return;
+  if (!cur || !SVG_TPL.includes(cur.bg)){ el.textContent = ''; tplKey = ''; return; }
+  const H = Math.max(cur.h, Math.ceil(sheet.clientHeight / curS()));
+  const key = cur.bg + '|' + cur.fs + '|' + H; if (key === tplKey) return;
+  tplKey = key;
+  el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 ' + H + '" style="width:100%;height:calc(' + H + ' * var(--s) * 1px)" aria-hidden="true">' + tplInner(cur.bg, cur.fs, H, 't') + '</svg>';
+}
+function setTemplate(id){
+  if (!cur || !TPL.some(t => t.id === id)) return;
+  cur.bg = id; sheet.dataset.bg = id; tplKey = ''; setVar(); changed();
+}
+function tplDialog(){
+  if (!cur) return;
+  modal('Modèle de page', b => {
+    const g = document.createElement('div'); g.className = 'tplgrid';
+    TPL.forEach(t => {
+      const x = document.createElement('button'); x.className = 'tplcard'; x.setAttribute('aria-pressed', cur.bg === t.id);
+      x.innerHTML = '<svg viewBox="0 0 900 1273" aria-hidden="true"><rect width="900" height="1273" fill="#fffffe"/>' + tplInner(t.id, 30, 1273, 'p' + t.id) + '</svg><span></span>';
+      x.querySelector('span').textContent = t.name;
+      x.onclick = () => { setTemplate(t.id); dlg.close(); };
+      g.append(x);
+    });
+    b.append(g);
+  });
+}
+
+/* ---------- texte enrichi : couleurs, tailles, alignement, liens, tableaux, code, raccourcis Markdown ---------- */
+Object.assign(IC, {
+  color:'<path d="M6 16L12 4l6 12"/><path d="M8.6 11.5h6.8"/>',
+  alL:'<path d="M4 6h16M4 10h10M4 14h16M4 18h10"/>',
+  alC:'<path d="M4 6h16M7 10h10M4 14h16M7 18h10"/>',
+  alR:'<path d="M4 6h16M10 10h10M4 14h16M10 18h10"/>',
+  link:'<path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/>',
+  table:'<rect class="nf" x="4" y="5" width="16" height="14" rx="2"/><path d="M4 10h16M4 14.5h16M10 5v14"/>'
+});
+$('#colBtn').innerHTML = svg('color');
+$('#hiBtn').innerHTML = svg('hl');
+$('#alignBtn').innerHTML = svg('alL');
+$('#linkBtn').innerHTML = svg('link');
+$('#tblBtn').innerHTML = svg('table');
+['colBtn', 'hiBtn', 'sizeBtn', 'alignBtn', 'linkBtn', 'tblBtn', 'codeBtn'].forEach(id => $('#' + id).addEventListener('mousedown', e => e.preventDefault()));
+
+const exec = (c, v) => document.execCommand(c, false, v);
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+let lastRange = null;
+document.addEventListener('selectionchange', () => {
+  const s = getSelection();
+  if (s.rangeCount && s.anchorNode && text.contains(s.anchorNode)) lastRange = s.getRangeAt(0).cloneRange();
+});
+function restoreSel(){
+  text.focus();
+  if (lastRange && !text.contains(getSelection().anchorNode || null)){
+    const s = getSelection(); s.removeAllRanges(); s.addRange(lastRange);
+  } else if (lastRange && !getSelection().rangeCount){
+    const s = getSelection(); s.addRange(lastRange);
+  }
+}
+const anchorEl = () => { const n = getSelection().anchorNode; return n ? (n.nodeType === 1 ? n : n.parentElement) : null; };
+
+/* fenêtre flottante sous un bouton */
+const pop = $('#pop');
+function openPop(btn, build){
+  pop.textContent = ''; build(pop); pop.classList.add('open');
+  const r = btn.getBoundingClientRect();
+  pop.style.left = Math.max(8, Math.min(innerWidth - pop.offsetWidth - 8, r.left)) + 'px';
+  pop.style.top = (r.bottom + 6) + 'px';
+}
+const closePop = () => pop.classList.remove('open');
+document.addEventListener('pointerdown', e => { if (pop.classList.contains('open') && !pop.contains(e.target) && !e.target.closest('#toolsText')) closePop(); });
+function swatches(list, fn, cur_){
+  const w = document.createElement('div'); w.className = 'pw';
+  list.forEach(([c, n]) => {
+    const b = document.createElement('button'); b.className = 'sw'; b.setAttribute('aria-label', n); b.title = n;
+    b.style.background = c === 'transparent' ? 'repeating-conic-gradient(#ddd 0 25%, #fff 0 50%) 50% / 12px 12px' : c;
+    b.addEventListener('mousedown', e => e.preventDefault());
+    b.onclick = () => { closePop(); fn(c); };
+    if (c === cur_) b.setAttribute('aria-pressed', 'true');
+    w.append(b);
+  });
+  return w;
+}
+
+/* couleur du texte et surlignage */
+const TCOL = [['#171a22', 'Noir'], ['#c62f3a', 'Rouge'], ['#e2761b', 'Orange'], ['#14804a', 'Vert'], ['#1f3fbf', 'Bleu'], ['#7a3fc0', 'Violet'], ['#6a7183', 'Gris']];
+const HCOL = [['#fff176', 'Jaune'], ['#a5f3c0', 'Vert'], ['#a5d8ff', 'Bleu'], ['#ffc9de', 'Rose'], ['#ffd8a8', 'Orange'], ['transparent', 'Retirer le surlignage']];
+let txtCol = '#c62f3a', hiCol = '#fff176';
+function paintBars(){
+  $('#colBtn').style.boxShadow = 'inset 0 -4px 0 ' + txtCol;
+  $('#hiBtn').style.boxShadow = 'inset 0 -4px 0 ' + hiCol;
+}
+function applyColor(kind, c){
+  restoreSel(); exec('styleWithCSS', true);
+  exec(kind === 'fg' ? 'foreColor' : 'hiliteColor', c);
+  exec('styleWithCSS', false);
+  if (kind === 'fg') txtCol = c; else if (c !== 'transparent') hiCol = c;
+  paintBars(); textChanged();
+}
+$('#colBtn').onclick = () => openPop($('#colBtn'), p => p.append(swatches(TCOL, c => applyColor('fg', c), txtCol)));
+$('#hiBtn').onclick = () => openPop($('#hiBtn'), p => p.append(swatches(HCOL, c => applyColor('bg', c), hiCol)));
+paintBars();
+
+/* taille du texte sélectionné */
+const SIZES = [['s-sm', 'Petit'], ['s-n', 'Normal'], ['s-lg', 'Grand'], ['s-xl', 'Très grand']];
+function applySize(cls){
+  restoreSel();
+  const s = getSelection();
+  if (!s.rangeCount || s.isCollapsed){ toast('Sélectionne du texte d’abord.'); return; }
+  exec('styleWithCSS', false); exec('fontSize', '7');
+  const made = [];
+  text.querySelectorAll('font[size="7"]').forEach(f => {
+    const sp = document.createElement('span'); sp.className = cls;
+    while (f.firstChild) sp.append(f.firstChild);
+    f.replaceWith(sp); made.push(sp);
+  });
+  if (made.length){ const r = document.createRange(); r.setStartBefore(made[0]); r.setEndAfter(made[made.length - 1]); s.removeAllRanges(); s.addRange(r); }
+  textChanged();
+}
+$('#sizeBtn').onclick = () => openPop($('#sizeBtn'), p => {
+  SIZES.forEach(([cls, name]) => {
+    const b = document.createElement('button'); b.className = 'mi'; b.textContent = name;
+    b.addEventListener('mousedown', e => e.preventDefault());
+    b.onclick = () => { closePop(); applySize(cls); };
+    p.append(b);
+  });
+});
+
+/* alignement */
+const ALN = ['Left', 'Center', 'Right'], ALI = ['alL', 'alC', 'alR'];
+const qs = c => { try { return document.queryCommandState(c); } catch (e) { return false; } };
+function alignIndex(){ return qs('justifyCenter') ? 1 : qs('justifyRight') ? 2 : 0; }
+function updateAlignIcon(){ $('#alignBtn').innerHTML = svg(ALI[alignIndex()]); }
+$('#alignBtn').onclick = () => {
+  restoreSel();
+  const next = (alignIndex() + 1) % 3;
+  exec('styleWithCSS', true); exec('justify' + ALN[next]); exec('styleWithCSS', false);
+  updateAlignIcon(); textChanged();
+};
+document.addEventListener('selectionchange', () => { if (mode === 'text' && document.activeElement === text) updateAlignIcon(); });
+
+/* liens */
+function normUrl(u){
+  u = u.trim(); if (!u) return '';
+  if (/^(https?:|mailto:|tel:)/i.test(u)) return u;
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u)) return 'mailto:' + u;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(u)) return '';               // autres schémas refusés
+  return 'https://' + u;
+}
+function fixLinks(){ text.querySelectorAll('a[href]').forEach(a => { a.target = '_blank'; a.rel = 'noopener noreferrer'; }); }
+text.addEventListener('click', e => {
+  const a = e.target.closest && e.target.closest('a');
+  if (a && (e.ctrlKey || e.metaKey)){ e.preventDefault(); window.open(a.href, '_blank', 'noopener'); }
+});
+$('#linkBtn').onclick = () => {
+  restoreSel();
+  const rg = getSelection().rangeCount ? getSelection().getRangeAt(0).cloneRange() : null;
+  const el = anchorEl(), a = el && el.closest ? el.closest('a') : null;
+  const empty = !rg || (rg.collapsed && !a);
+  let inp;
+  modal(a ? 'Modifier le lien' : 'Insérer un lien', b => {
+    const f = document.createElement('label'); f.className = 'field';
+    const s = document.createElement('span'); s.textContent = 'Adresse (https://… ou e-mail)';
+    inp = document.createElement('input'); inp.type = 'text'; inp.value = a ? a.getAttribute('href') : ''; inp.autocapitalize = 'off'; inp.spellcheck = false;
+    f.append(s, inp); b.append(f);
+    const p = document.createElement('p'); p.textContent = 'Astuce : Ctrl (ou ⌘) + clic sur un lien dans le texte pour l’ouvrir.'; b.append(p);
+    setTimeout(() => inp.focus(), 50);
+  }, [
+    ...(a ? [{label:'Retirer le lien', danger:true, fn:() => { dlg.close(); text.focus(); const r = document.createRange(); r.selectNodeContents(a); const s = getSelection(); s.removeAllRanges(); s.addRange(r); exec('unlink'); textChanged(); }},
+             {label:'Ouvrir', fn:() => { const u = normUrl(a.getAttribute('href')); if (u) window.open(u, '_blank', 'noopener'); return false; }}] : []),
+    {label:'Annuler'},
+    {label:'Enregistrer', primary:true, fn:() => {
+      const u = normUrl(inp.value);
+      if (!u){ toast('Adresse non valide.'); return false; }
+      dlg.close(); text.focus();
+      if (a){ a.setAttribute('href', u); }
+      else {
+        const s = getSelection(); s.removeAllRanges(); if (rg) s.addRange(rg);
+        if (rg && !rg.collapsed) exec('createLink', u);
+        else exec('insertHTML', '<a href="' + esc(u) + '">' + esc(u.replace(/^mailto:|^tel:/i, '')) + '</a> ');
+      }
+      fixLinks(); textChanged();
+    }}
+  ]);
+  if (empty && !text.textContent.trim()) { /* note vide : le lien sera inséré tel quel */ }
+};
+
+/* code */
+$('#codeBtn').onclick = () => {
+  restoreSel();
+  const s = getSelection(); if (!s.rangeCount) return;
+  const el = anchorEl(), c = el && el.closest ? el.closest('code') : null;
+  if (c){ c.replaceWith(...c.childNodes); textChanged(); return; }
+  if (s.isCollapsed){ toast('Sélectionne du texte à mettre en code.'); return; }
+  exec('insertHTML', '<code>' + esc(s.toString()) + '</code>'); textChanged();
+};
+
+/* tableaux */
+const cellOf = n => { const e = n && (n.nodeType === 1 ? n : n.parentElement); return e && e.closest ? e.closest('td,th') : null; };
+function caretIn(td){ const r = document.createRange(); r.selectNodeContents(td); r.collapse(true); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+function newRow(n){ const tr = document.createElement('tr'); for (let i = 0; i < n; i++){ const td = document.createElement('td'); td.innerHTML = '<br>'; tr.append(td); } return tr; }
+function curCell(){ const s = getSelection(); const td = s.rangeCount ? cellOf(s.anchorNode) : null; return td && text.contains(td) ? td : null; }
+function tableDialog(){
+  const td = curCell();
+  if (td){
+    const tr = td.closest('tr'), tb = td.closest('table'), col = [...tr.children].indexOf(td);
+    modal('Tableau', b => {
+      const row = document.createElement('div'); row.className = 'rowbtns'; b.append(row);
+      const act = (label, fn, danger) => { const x = document.createElement('button'); x.className = danger ? 'btn danger' : 'btn'; x.textContent = label; x.onclick = () => { fn(); dlg.close(); textChanged(); }; row.append(x); };
+      act('Ajouter une ligne dessous', () => tr.after(newRow(tr.children.length)));
+      act('Ajouter une colonne à droite', () => tb.querySelectorAll('tr').forEach(r => { const c = document.createElement('td'); c.innerHTML = '<br>'; const ref = r.children[col]; ref ? ref.after(c) : r.append(c); }));
+      act('Supprimer la ligne', () => { if (tb.querySelectorAll('tr').length > 1) tr.remove(); else tb.remove(); }, true);
+      act('Supprimer la colonne', () => { if (tr.children.length > 1) tb.querySelectorAll('tr').forEach(r => r.children[col] && r.children[col].remove()); else tb.remove(); }, true);
+      act('Supprimer le tableau', () => tb.remove(), true);
+    });
+    return;
+  }
+  let rows, cols;
+  modal('Insérer un tableau', b => {
+    const mk = (label, v) => { const f = document.createElement('label'); f.className = 'field'; const s = document.createElement('span'); s.textContent = label; const i = document.createElement('input'); i.type = 'number'; i.min = 1; i.max = 12; i.value = v; i.className = 'num'; f.append(s, i); b.append(f); return i; };
+    rows = mk('Lignes', 3); cols = mk('Colonnes', 3);
+  }, [{label:'Annuler'}, {label:'Insérer', primary:true, fn:() => {
+    const r = Math.max(1, Math.min(12, +rows.value || 3)), c = Math.max(1, Math.min(12, +cols.value || 3));
+    dlg.close(); restoreSel();
+    exec('insertHTML', '<table class="tb"><tbody>' + ('<tr>' + '<td><br></td>'.repeat(c) + '</tr>').repeat(r) + '</tbody></table><div><br></div>');
+    const first = text.querySelector('table.tb td'); if (first) caretIn(first);
+    textChanged();
+  }}]);
+}
+$('#tblBtn').onclick = () => { restoreSel(); tableDialog(); };
+text.addEventListener('keydown', e => {
+  if (e.key !== 'Tab') return;
+  const td = curCell(); if (!td) return;
+  e.preventDefault();
+  const tb = td.closest('table'); let cells = [...tb.querySelectorAll('td,th')], i = cells.indexOf(td) + (e.shiftKey ? -1 : 1);
+  if (i >= cells.length){ const tr = td.closest('tr'); tr.after(newRow(tr.children.length)); cells = [...tb.querySelectorAll('td,th')]; textChanged(); }
+  if (i >= 0 && i < cells.length) caretIn(cells[i]);
+});
+
+/* raccourcis Markdown pendant la frappe (manipulation directe du DOM, sans execCommand) */
+const INLINE_TAGS = new Set(['B', 'STRONG', 'I', 'EM', 'U', 'S', 'STRIKE', 'SPAN', 'A', 'CODE', 'FONT']);
+const isInlineNode = n => n.nodeType === 3 || (n.nodeType === 1 && INLINE_TAGS.has(n.tagName));
+function caretAt(node, off){ const r = document.createRange(); r.setStart(node, off); r.collapse(true); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+function firstLeaf(el){ let n = el; while (n.firstChild && n.firstChild.nodeType === 1 && n.firstChild.tagName !== 'BR') n = n.firstChild; return n; }
+/* renvoie le <div> qui contient le curseur ; enveloppe d'abord les lignes « nues » posées directement dans l'éditeur */
+function lineDiv(node, off){
+  let top = node; while (top && top.parentNode !== text){ if (!top.parentNode) return null; top = top.parentNode; }
+  if (!top) return null;
+  if (top.nodeType === 1 && !isInlineNode(top) && top.tagName !== 'BR') return top.tagName === 'DIV' ? top : null;
+  let first = top, last = top;
+  while (first.previousSibling && isInlineNode(first.previousSibling)) first = first.previousSibling;
+  while (last.nextSibling && isInlineNode(last.nextSibling)) last = last.nextSibling;
+  const div = document.createElement('div'); first.before(div);
+  for (let n = first; n; ){ const nx = n === last ? null : n.nextSibling; div.append(n); n = nx; }
+  if (node.nodeType === 3) caretAt(node, off); else caretAt(node, off);
+  return div;
+}
+function tryBlockShortcut(){
+  const s = getSelection(); if (!s.rangeCount || !s.isCollapsed || !s.anchorNode || !text.contains(s.anchorNode)) return;
+  const node = s.anchorNode, off = s.anchorOffset;
+  const div = lineDiv(node, off); if (!div || div.classList.contains('chk')) return;
+  const sel2 = getSelection(); if (!sel2.rangeCount) return;
+  const rg = document.createRange(); rg.selectNodeContents(div); rg.setEnd(sel2.anchorNode, sel2.anchorOffset);
+  const t = rg.toString().replace(/ /g, ' ');
+  let act = null;
+  if (/^#{1,3} $/.test(t)) act = 'h2';
+  else if (/^[-*•] $/.test(t)) act = 'ul';
+  else if (/^\d+[.)] $/.test(t)) act = 'ol';
+  else if (/^\[ ?\] $/.test(t)) act = 'chk';
+  else if (/^\[[xX]\] $/.test(t)) act = 'chkd';
+  if (!act){ return; }
+  rg.deleteContents();
+  const moveInto = tag => {
+    const el = document.createElement(tag);
+    while (div.firstChild){ const c = div.firstChild; if (c.nodeType === 3 && !c.nodeValue) c.remove(); else el.append(c); }
+    if (!el.firstChild) el.append(document.createElement('br'));
+    return el;
+  };
+  let target;
+  if (act === 'h2'){ target = moveInto('h2'); div.replaceWith(target); }
+  else if (act === 'ul' || act === 'ol'){
+    const li = moveInto('li'), list = document.createElement(act); list.append(li); div.replaceWith(list); target = li;
+  } else {
+    div.classList.add('chk'); if (act === 'chkd') div.classList.add('done');
+    [...div.childNodes].forEach(c => { if (c.nodeType === 3 && !c.nodeValue) c.remove(); });
+    if (!div.firstChild) div.append(document.createElement('br'));
+    div.prepend(mkCb()); target = div;
+  }
+  const tn = (function f(n){ for (const c of n.childNodes){ if (c.nodeType === 3 && c.nodeValue) return c; if (c.nodeType === 1 && !c.classList.contains('cb')){ const r = f(c); if (r) return r; } } return null; })(target);
+  if (tn) caretAt(tn, 0);
+  else { const br = target.querySelector('br'); br ? caretAt(br.parentNode, [...br.parentNode.childNodes].indexOf(br)) : caretAt(target, target.childNodes.length); }
+}
+function tryInline(ch){
+  const s = getSelection(); if (!s.rangeCount || !s.isCollapsed) return;
+  const node = s.anchorNode; if (!node || node.nodeType !== 3 || (node.parentElement && node.parentElement.closest('code'))) return;
+  const off = s.anchorOffset, t = node.nodeValue.slice(0, off);
+  let m, tag, start, inner;
+  if (ch === '`'){ m = /`([^`]+)`$/.exec(t); if (m){ tag = 'code'; start = m.index; inner = m[1]; } }
+  else {
+    m = /\*\*([^*\s](?:[^*]*[^*\s])?)\*\*$/.exec(t);
+    if (m){ tag = 'b'; start = m.index; inner = m[1]; }
+    else { m = /(^|[^*])\*([^*\s](?:[^*]*[^*\s])?)\*$/.exec(t); if (m){ tag = 'i'; start = m.index + m[1].length; inner = m[2]; } }
+  }
+  if (!tag) return;
+  const after = node.nodeValue.slice(off);
+  const el = document.createElement(tag); el.textContent = inner;
+  const before = document.createTextNode(node.nodeValue.slice(0, start)), tail = document.createTextNode('\u200b' + after);
+  node.replaceWith(before, el, tail);
+  caretAt(tail, 1);                      // la pastille invisible permet de sortir de la mise en forme ; elle est retirée dès la frappe suivante
+}
+function stripZw(){
+  if (!text.innerHTML.includes('\u200b')) return;
+  const w = document.createTreeWalker(text, NodeFilter.SHOW_TEXT), nodes = [], s = getSelection();
+  while (w.nextNode()) nodes.push(w.currentNode);
+  nodes.forEach(n => {
+    const v = n.nodeValue; if (!v.includes('\u200b') || v === '\u200b') return;
+    const isA = s.rangeCount && s.anchorNode === n, off = isA ? s.anchorOffset : 0;
+    const lost = isA ? v.slice(0, off).split('\u200b').length - 1 : 0;
+    n.nodeValue = v.replace(/\u200b/g, ''); if (isA) caretAt(n, Math.max(0, off - lost));
+  });
+}
+
+/* ---------- historique des versions (local à l'appareil) ---------- */
+const MAX_VERSIONS = 40;
+const lastSnap = {};
+const vPut = v => idb(store('versions', 'readwrite').put(v));
+const vDel = id => idb(store('versions', 'readwrite').delete(id));
+const vByNote = nid => idb(store('versions', 'readonly').index('nid').getAll(nid)).then(a => a.sort((x, y) => y.ts - x.ts));
+function sigOf(n){
+  const s = JSON.stringify([n.title, n.html, n.strokes, n.objs, n.bgs, n.bg, n.h, n.fs]);
+  let h = 2166136261; for (let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return (h >>> 0).toString(36) + ':' + s.length;
+}
+const snapBusy = {};
+async function snapshot(n, label, gap){
+  if (!db || !n || n.purged || n.deleted || snapBusy[n.id]) return false;
+  snapBusy[n.id] = true;
+  try {
+    const now = Date.now();
+    if (!lastSnap[n.id]){ const l = await vByNote(n.id); lastSnap[n.id] = {ts:l[0] ? l[0].ts : 0, sig:l[0] ? l[0].sig : ''}; }
+    const ls = lastSnap[n.id];
+    if (gap && now - ls.ts < gap) return false;
+    const sig = sigOf(n);
+    if (sig === ls.sig) return false;
+    const data = JSON.parse(JSON.stringify({title:n.title, html:n.html, text:n.text, strokes:n.strokes, objs:n.objs, bgs:n.bgs, bg:n.bg, h:n.h, fs:n.fs}));
+    await vPut({id:n.id + ':' + now, nid:n.id, ts:now, sig, label:label || '', data});
+    lastSnap[n.id] = {ts:now, sig};
+    const all = await vByNote(n.id);
+    for (const v of all.slice(MAX_VERSIONS)) await vDel(v.id);
+    return true;
+  } catch (e) { return false; }
+  finally { snapBusy[n.id] = false; }
+}
+async function purgeVersions(nid){
+  delete lastSnap[nid];
+  if (!db) return;
+  try { (await vByNote(nid)).forEach(v => vDel(v.id)); } catch (e) {}
+}
+function drawThumb(cv, d){
+  const g = cv.getContext('2d'); g.fillStyle = '#fffffe'; g.fillRect(0, 0, cv.width, cv.height);
+  const k = cv.width / W;
+  (d.strokes || []).forEach(s => drawStroke(g, s, k));
+}
+const fmtFull = ts => new Date(ts).toLocaleString('fr-FR', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+function summary(d){
+  const words = (d.text || '').split(/\s+/).filter(Boolean).length;
+  return words + ' mot' + (words > 1 ? 's' : '') + ' · ' + (d.strokes || []).length + ' trait' + ((d.strokes || []).length > 1 ? 's' : '') + ' · ' + (d.objs || []).length + ' objet' + ((d.objs || []).length > 1 ? 's' : '');
+}
+async function restoreVersion(v){
+  if (!cur) return;
+  const n = cur;
+  await snapshot(n, 'Avant restauration', 0);
+  const d = JSON.parse(JSON.stringify(v.data));
+  Object.assign(n, {title:d.title || '', html:d.html || '', text:d.text || '', strokes:d.strokes || [], objs:d.objs || [], bgs:d.bgs || [], bg:d.bg || 'lines', h:d.h || 1400, fs:d.fs || n.fs, updated:Date.now()});
+  lastEdit = 'text';
+  saveNote(n); openNote(n.id);
+  toast('Version du ' + fmtFull(v.ts) + ' restaurée.');
+}
+async function historyDialog(){
+  if (!cur || !db) return;
+  commit();
+  const n = cur;
+  await snapshot(n, '', 60e3);
+  let list = [];
+  try { list = await vByNote(n.id); } catch (e) {}
+  modal('Historique des versions', b => {
+    const p = document.createElement('p');
+    p.textContent = 'Des points de sauvegarde sont créés automatiquement (au plus un toutes les 10 minutes, et avant une restauration ou une synchronisation qui remplace la note). Les ' + MAX_VERSIONS + ' plus récents sont gardés sur cet appareil.';
+    b.append(p);
+    if (!list.length){
+      const q = document.createElement('p'); q.textContent = 'Aucune version enregistrée pour l’instant. Écris ou dessine un peu : la première apparaîtra ici.'; b.append(q); return;
+    }
+    list.forEach((v, i) => {
+      const row = document.createElement('div'); row.className = 'vrow';
+      const cv = document.createElement('canvas'); cv.width = 192; cv.height = 256; cv.className = 'vthumb'; drawThumb(cv, v.data);
+      const info = document.createElement('div'); info.className = 'vinfo';
+      const t = document.createElement('div'); t.className = 'vt'; t.textContent = fmtFull(v.ts) + (v.label ? ' — ' + v.label : '') + (i === 0 && v.sig === sigOf(n) ? ' (actuelle)' : '');
+      const s = document.createElement('div'); s.className = 'vs'; s.textContent = summary(v.data);
+      const x = document.createElement('div'); x.className = 'vx'; x.textContent = (v.data.text || '').trim().replace(/\s+/g, ' ').slice(0, 90) || '—';
+      info.append(t, s, x);
+      if (!(i === 0 && v.sig === sigOf(n))){
+        const btn = document.createElement('button'); btn.className = 'btn'; btn.textContent = 'Restaurer';
+        btn.onclick = () => { if (confirm('Restaurer cette version ? La version actuelle est conservée dans l’historique.')){ dlg.close(); restoreVersion(v); } };
+        info.append(btn);
+      }
+      row.append(cv, info); b.append(row);
+    });
+  });
 }
 
 /* ---------- app installable (PWA) ---------- */
