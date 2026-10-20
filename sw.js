@@ -1,10 +1,16 @@
 // MattNotes — service worker (fonctionnement hors ligne)
 // Pour publier une mise à jour : changer le numéro de version ci-dessous.
-const VERSION = 'mattnotes-v1';
-const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
+const VERSION = 'mattnotes-v3';
+const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
+// Bibliothèques facultatives (équations, PDF, export) : mises en cache si présentes, sans bloquer l'installation
+const LIBS = ['./lib/katex.js', './lib/katex.css', './lib/html2canvas.js', './lib/pdf.js', './lib/pdf.worker.js'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+  e.waitUntil(
+    caches.open(VERSION)
+      .then(c => c.addAll(CORE).then(() => Promise.all(LIBS.map(u => c.add(u).catch(() => {})))))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', e => {
