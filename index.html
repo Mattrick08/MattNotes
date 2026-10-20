@@ -164,6 +164,8 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 #sheet[data-bg=cornell] #text{padding-left:calc(272 * var(--s) * 1px)}
 #text u{text-decoration:underline}
 #text a{color:#1f3fbf;text-decoration:underline}
+#text a.wl{color:#6a2fc0;text-decoration:none;border-bottom:1.5px dotted currentColor;cursor:pointer}
+#text a.wl.dead{color:#c62f3a;border-bottom-style:dashed}
 #text code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88em;background:#eef1f8;border-radius:.25em;padding:.05em .3em}
 #text .s-n{font-size:calc(var(--f) * var(--s) * 1px)}
 #text .s-sm{font-size:calc(var(--f) * .8 * var(--s) * 1px)}
@@ -188,6 +190,21 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 .rowbtns{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
 .num{width:80px!important}
 
+#refbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:6px 14px;border-bottom:1px solid var(--line);font-size:13px;color:var(--mute);flex:none}
+#refbar[hidden]{display:none}
+.chip.sm{padding:2px 10px;font-size:12px}
+.pick{display:flex;flex-direction:column;gap:4px;margin-top:10px;max-height:50vh;overflow:auto}
+.pickrow{text-align:left}
+#pane{display:none;flex-direction:column;border-left:1px solid var(--line);min-width:0;min-height:0;background:var(--panel)}
+.pane-h{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--line);font-size:13px}
+.pane-h .sp{flex:1}
+#paneF{flex:1;border:0;width:100%;min-height:0;background:var(--bg)}
+body.split #app{grid-template-columns:260px 1fr 1fr}
+body.split #pane{display:flex}
+body.pane #app{grid-template-columns:1fr}
+body.pane #side,body.pane .only-mobile{display:none!important}
+body.pane #main{display:flex!important}
+@media (max-width:999px){body.split #pane{display:none}body.split #app{grid-template-columns:300px 1fr}}
 @media (max-width:760px),(max-height:520px){
   #app{grid-template-columns:1fr}
   body.view-list #main{display:none}
@@ -199,7 +216,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 @media print{
   html,body{height:auto;background:#fff}
   #app{display:block;height:auto}
-  #side,.bar,.tools,.menu,#toast,#noNote,#zoomPill,#selbar,.oc,.rh{display:none!important}
+  #pane,#refbar,#side,.bar,.tools,.menu,#toast,#noNote,#zoomPill,#selbar,.oc,.rh{display:none!important}
   body.view-list #main{display:block}
   #main,#editor{display:block}
   #scroller{overflow:visible;padding:0}
@@ -254,6 +271,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
         <button class="ib t" id="sizeBtn" aria-label="Taille du texte sélectionné">Aa</button>
         <button class="ib" id="alignBtn" aria-label="Alignement du paragraphe"></button>
         <button class="ib" id="linkBtn" aria-label="Lien"></button>
+        <button class="ib t" id="nlBtn" aria-label="Lien vers une note">[[ ]]</button>
         <button class="ib" id="tblBtn" aria-label="Tableau"></button>
         <button class="ib t" id="codeBtn" aria-label="Code"><code>&lt;/&gt;</code></button>
         <span class="sep"></span>
@@ -282,6 +300,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
         <button id="fingerBtn" class="ib" aria-pressed="true"></button>
       </div>
 
+      <div id="refbar" hidden></div>
       <div id="scroller">
         <div id="sheet" data-bg="lines">
           <div id="tpl"></div>
@@ -300,6 +319,10 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
       </div>
     </section>
   </main>
+  <aside id="pane">
+    <div class="pane-h"><b>À côté</b><span class="sp"></span><button id="paneSw" class="btn">Échanger</button><button id="paneX" class="btn">Fermer</button></div>
+    <iframe id="paneF" title="Note affichée à côté"></iframe>
+  </aside>
 </div>
 
 <div id="menu" class="menu" role="menu">
@@ -313,6 +336,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
   </div>
   <button class="mi" id="tplBtn">Modèles de page…</button>
   <button class="mi" id="pinBtn">Épingler</button>
+  <button class="mi" id="splitBtn">Ouvrir une autre note à côté…</button>
   <button class="mi" id="moveBtn">Déplacer vers un dossier…</button>
   <hr>
   <button class="mi" id="mImg">Insérer une image</button>
@@ -390,7 +414,9 @@ const SHAPES = ['line','rect','ellipse','arrow'];
 let set = {tool:'pen', cp:'#171a22', ch:'#f5d800', size:3, finger:'auto', last:''};
 try { Object.assign(set, JSON.parse(localStorage.getItem('mattnotes.set') || '{}')); } catch (e) {}
 if (!TOOLS.includes(set.tool)) set.tool = 'pen';
-const saveSet = () => { try { localStorage.setItem('mattnotes.set', JSON.stringify(set)); } catch (e) {} };
+const IS_PANE = /[?&]pane=/.test(location.search);      // 2e éditeur affiché à côté (vue scindée)
+if (IS_PANE) document.body.classList.add('pane');
+const saveSet = () => { if (IS_PANE) return; try { localStorage.setItem('mattnotes.set', JSON.stringify(set)); } catch (e) {} };
 
 /* ---------- stockage IndexedDB ---------- */
 let db = null;
@@ -452,11 +478,11 @@ function toast(m, act){
 }
 
 function saveNote(n){
-  if (db) dbPut(n).then(() => { if (window.scheduleSync) scheduleSync(); }).catch(() => toast('Échec de l’enregistrement sur cet appareil.'));
+  if (db) dbPut(n).then(() => { bcSend(n.id); if (window.scheduleSync) scheduleSync(); }).catch(() => toast('Échec de l’enregistrement sur cet appareil.'));
   if (db && !n.purged && !n.deleted) snapshot(n, '', 10 * 60e3);
 }
 function commit(){ if (cur){ clearTimeout(saveT); saveNote(cur); } }
-function changed(){ if (!cur) return; cur.updated = Date.now(); clearTimeout(saveT); saveT = setTimeout(() => { saveNote(cur); renderList(); }, 400); }
+function changed(){ if (!cur) return; cur.updated = Date.now(); clearTimeout(saveT); saveT = setTimeout(() => { saveNote(cur); renderList(); renderRefs(); }, 400); }
 document.addEventListener('visibilitychange', () => { if (document.hidden) commit(); });
 addEventListener('pagehide', commit);
 
@@ -502,7 +528,7 @@ function sanitize(html){
         if (!OK.has(c.tagName)){
           if (DROP.has(c.tagName.toUpperCase())) c.remove(); else c.replaceWith(...c.childNodes);
         } else {
-          const cls = c.getAttribute('class') || '', st = c.getAttribute('style') || '', href = c.getAttribute('href') || '';
+          const cls = c.getAttribute('class') || '', st = c.getAttribute('style') || '', href = c.getAttribute('href') || '', dn = c.getAttribute('data-n') || '';
           [...c.attributes].forEach(a => c.removeAttribute(a.name));
           if (c.tagName === 'DIV' && /^chk( done)?$/.test(cls)) c.className = cls;
           else if (c.tagName === 'SPAN' && cls === 'cb') c.className = 'cb';
@@ -510,7 +536,8 @@ function sanitize(html){
           else if (c.tagName === 'TABLE' && cls === 'tb') c.className = 'tb';
           const cs = cleanStyle(st); if (cs) c.setAttribute('style', cs);
           if (c.tagName === 'A'){
-            if (/^(https?:|mailto:|tel:)/i.test(href.trim())){ c.setAttribute('href', href.trim()); c.setAttribute('target', '_blank'); c.setAttribute('rel', 'noopener noreferrer'); }
+            if (/^wl( dead)?$/.test(cls) && /^[\w-]{1,40}$/.test(dn)){ c.className = 'wl'; c.setAttribute('data-n', dn); }
+            else if (/^(https?:|mailto:|tel:)/i.test(href.trim())){ c.setAttribute('href', href.trim()); c.setAttribute('target', '_blank'); c.setAttribute('rel', 'noopener noreferrer'); }
             else c.replaceWith(...c.childNodes);
           }
         }
@@ -560,6 +587,8 @@ function folderNames(){
 }
 function renderChips(){
   if (view.startsWith('f:') && !folderNames().includes(view.slice(2))) view = 'all';
+  if (view.startsWith('t:') && !tagList().some(x => x[0] === view.slice(2))) view = 'all';
+  tagSig = tagList().join('|');
   const box = $('#chips'); box.textContent = '';
   const add = (id, label) => {
     const b = document.createElement('button'); b.className = 'chip'; b.textContent = label;
@@ -569,6 +598,7 @@ function renderChips(){
   };
   add('all', 'Toutes');
   folderNames().forEach(f => add('f:' + f, f));
+  tagList().slice(0, 40).forEach(x => add('t:' + x[0], '#' + x[0]));
   const tc = notes.filter(n => !n.purged && n.deleted).length;
   add('trash', tc ? 'Corbeille (' + tc + ')' : 'Corbeille');
 }
@@ -578,6 +608,7 @@ function renderList(){
   const trash = view === 'trash';
   let items = notes.filter(n => !n.purged && (trash ? n.deleted : !n.deleted));
   if (view.startsWith('f:')) items = items.filter(n => n.folder === view.slice(2));
+  if (view.startsWith('t:')) items = items.filter(n => tagsOf(n).includes(view.slice(2)));
   if (q) items = items.filter(n => (n.title + ' ' + n.text).toLowerCase().includes(q));
   items.sort((a, b) => trash ? b.deleted - a.deleted : (b.pin - a.pin) || (b.updated - a.updated));
   if (!items.length){
@@ -610,7 +641,7 @@ function renderList(){
     b.append(t, s); li.append(b); ul.append(li);
   });
 }
-$('#list').addEventListener('click', e => { const b = e.target.closest('button.item'); if (b) openNote(b.dataset.id); });
+$('#list').addEventListener('click', e => { const b = e.target.closest('button.item'); if (!b) return; if ((e.shiftKey || e.altKey) && !IS_PANE) openInPane(b.dataset.id); else openNote(b.dataset.id); });
 $('#search').addEventListener('input', renderList);
 
 /* ---------- corbeille ---------- */
@@ -705,24 +736,25 @@ function moveDialog(){
 /* ---------- ouverture / création ---------- */
 function showEditor(on){ $('#editor').hidden = !on; $('#noNote').hidden = on; }
 function closeEditor(){
-  cur = null; live = null; active = null; clearSel(); deselectObj();
+  cur = null; renderRefs(); syncPane(); live = null; active = null; clearSel(); deselectObj();
   showEditor(false); document.body.classList.remove('view-edit'); document.body.classList.add('view-list');
 }
 function openNote(id){
   const prev = cur;
   commit(); clearSel(); deselectObj();
   const n = notes.find(x => x.id === id); if (!n || n.purged || n.deleted) return;
+  if (!IS_PANE && paneId === id) closePane();
   if (prev && prev !== n && db) snapshot(prev, '', 120e3);
-  cur = n; set.last = id; saveSet();
+  cur = n; if (!IS_PANE){ set.last = id; saveSet(); }
   $('#title').value = n.title;
-  text.innerHTML = sanitize(n.html); fixChecks(); fixLinks(); syncEmpty();
+  text.innerHTML = sanitize(n.html); fixChecks(); fixLinks(); refreshWiki(); syncEmpty();
   sheet.dataset.bg = n.bg;
   ustack = []; rstack = []; live = null; active = null; zoom = 1; lastEdit = 'text';
   showEditor(true);
   document.body.classList.remove('view-list'); document.body.classList.add('view-edit');
   layoutSheet(); setVar(); renderBgs(); renderObjs(); resizeCanvas();
   scroller.scrollTop = 0; scroller.scrollLeft = 0;
-  updateZoomUI(); renderList();
+  updateZoomUI(); renderList(); renderRefs(); syncPane();
 }
 function createNote(){
   $('#search').value = '';
@@ -756,6 +788,7 @@ text.addEventListener('input', e => {
   if (e.inputType === 'insertText'){
     if (e.data === ' ') tryBlockShortcut();
     else if (e.data === '*' || e.data === '`') tryInline(e.data);
+    else if (e.data === ']') tryWikiLink();
   }
   stripZw(); fixLinks();
   if (text.querySelector('.chk, .cb')){
@@ -1798,7 +1831,7 @@ $('#expPdf').onclick = async () => {
 
 /* ---------- synchronisation entre appareils (dépôt GitHub privé) ---------- */
 const SYNC_KEY = 'mattnotes.sync';
-const syncCfg = () => { try { const c = JSON.parse(localStorage.getItem(SYNC_KEY) || 'null'); return c && c.owner && c.repo && c.token ? c : null; } catch (e) { return null; } };
+const syncCfg = () => { if (IS_PANE) return null; try { const c = JSON.parse(localStorage.getItem(SYNC_KEY) || 'null'); return c && c.owner && c.repo && c.token ? c : null; } catch (e) { return null; } };
 const saveCfg = c => { try { if (c) localStorage.setItem(SYNC_KEY, JSON.stringify(c)); else localStorage.removeItem(SYNC_KEY); } catch (e) {} };
 let syncing = false, syncAgain = false, syncT = 0;
 const RAW = {Accept:'application/vnd.github.raw+json'};
@@ -1884,7 +1917,7 @@ async function applyRemote(n){
   const i = notes.findIndex(x => x.id === n.id);
   if (i >= 0 && !n.purged) await snapshot(notes[i], 'Avant synchronisation', 0);
   if (i >= 0) notes[i] = n; else notes.push(n);
-  if (db) await dbPut(n);
+  if (db){ await dbPut(n); bcSend(n.id); }
   if (cur && cur.id === n.id){
     if (n.deleted || n.purged) closeEditor(); else openNote(n.id);
   }
@@ -2156,7 +2189,7 @@ function normUrl(u){
 function fixLinks(){ text.querySelectorAll('a[href]').forEach(a => { a.target = '_blank'; a.rel = 'noopener noreferrer'; }); }
 text.addEventListener('click', e => {
   const a = e.target.closest && e.target.closest('a');
-  if (a && (e.ctrlKey || e.metaKey)){ e.preventDefault(); window.open(a.href, '_blank', 'noopener'); }
+  if (a && !a.classList.contains('wl') && (e.ctrlKey || e.metaKey)){ e.preventDefault(); window.open(a.href, '_blank', 'noopener'); }
 });
 $('#linkBtn').onclick = () => {
   restoreSel();
@@ -2414,9 +2447,201 @@ async function historyDialog(){
   });
 }
 
+/* ---------- liens entre notes [[Titre]], rétroliens, tags #mot ---------- */
+const liveNotes = () => notes.filter(n => !n.purged && !n.deleted);
+const findByTitle = t => { t = String(t).trim().toLowerCase(); return t ? liveNotes().find(n => (n.title || '').trim().toLowerCase() === t) : null; };
+
+/* tags */
+const TAG_RE = /(^|[\s(,;:])#([\p{L}\p{N}_-]{2,32})(?![\p{L}\p{N}_-])/gu;
+let tagSig = '';
+const tagMemo = new Map();
+function tagsOf(n){
+  const t = n.text || '';
+  let r = tagMemo.get(t); if (r) return r;
+  const set_ = new Set(); let m; TAG_RE.lastIndex = 0;
+  while ((m = TAG_RE.exec(t))){ const g = m[2].toLowerCase(); if (!/^\d+$/.test(g) && !/^([0-9a-f]{3}|[0-9a-f]{6})$/.test(g)) set_.add(g); }
+  r = [...set_]; if (tagMemo.size > 500) tagMemo.clear(); tagMemo.set(t, r); return r;
+}
+function tagList(){
+  const c = new Map();
+  liveNotes().forEach(n => tagsOf(n).forEach(t => c.set(t, (c.get(t) || 0) + 1)));
+  return [...c.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'fr'));
+}
+
+/* liens */
+function tryWikiLink(){
+  const s = getSelection(); if (!s.rangeCount || !s.isCollapsed) return;
+  const node = s.anchorNode; if (!node || node.nodeType !== 3 || !text.contains(node)) return;
+  if (node.parentElement.closest('a,code')) return;
+  const off = s.anchorOffset, m = /\[\[([^\[\]\n]{1,80})\]\]$/.exec(node.nodeValue.slice(0, off)); if (!m) return;
+  const title = m[1].trim(); if (!title) return;
+  let target = findByTitle(title), created = false;
+  if (!target){ target = newNote(); target.title = title; notes.unshift(target); saveNote(target); created = true; }
+  const a = document.createElement('a'); a.className = 'wl'; a.setAttribute('data-n', target.id); a.textContent = target.title || title;
+  const start = off - m[0].length;
+  const b4 = document.createTextNode(node.nodeValue.slice(0, start)), tail = document.createTextNode(' ' + node.nodeValue.slice(off));
+  node.replaceWith(b4, a, tail); caretAt(tail, 1);
+  if (created){ renderChips(); renderList(); toast('Note « ' + title + ' » créée.', {label:'Annuler', fn:() => { trashNote(target); }}); }
+}
+function refreshWiki(){
+  text.querySelectorAll('a.wl').forEach(a => {
+    const n = notes.find(x => x.id === a.getAttribute('data-n')), ok = n && !n.purged && !n.deleted;
+    a.classList.toggle('dead', !ok);
+    a.title = ok ? 'Ouvrir la note (Maj + clic : à côté)' : 'Cette note n’existe plus';
+  });
+}
+text.addEventListener('click', e => {
+  const a = e.target.closest && e.target.closest('a.wl'); if (!a) return;
+  e.preventDefault();
+  const id = a.getAttribute('data-n'), n = notes.find(x => x.id === id && !x.purged && !x.deleted);
+  if (!n){ toast('Cette note n’existe plus.'); return; }
+  if (IS_PANE){
+    if (e.shiftKey || e.altKey) parent.postMessage({open:id}, location.origin);
+    else if (id === mainId) toast('Cette note est déjà ouverte à gauche.');
+    else openNote(id);
+  } else if (e.shiftKey || e.altKey) openInPane(id);
+  else openNote(id);
+});
+function insertNoteLink(n, label){
+  text.focus();
+  if (!getSelection().rangeCount || !text.contains(getSelection().anchorNode)){ restoreSel(); }
+  if (!getSelection().rangeCount || !text.contains(getSelection().anchorNode)){
+    const r = document.createRange(); r.selectNodeContents(text); r.collapse(false); const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+  }
+  exec('insertHTML', '<a class="wl" data-n="' + n.id + '">' + esc(label || n.title || 'Sans titre') + '</a>&nbsp;');
+  textChanged();
+}
+function findById(id){ return notes.find(x => x.id === id); }
+
+/* sélecteur de note (lien, vue scindée) */
+function notePicker(title, onPick, o){
+  o = o || {};
+  modal(title, b => {
+    const q = document.createElement('input'); q.type = 'search'; q.placeholder = 'Rechercher une note'; q.autocomplete = 'off'; q.setAttribute('aria-label', 'Rechercher une note');
+    const ul = document.createElement('div'); ul.className = 'pick'; b.append(q, ul);
+    const draw = () => {
+      const s = q.value.trim().toLowerCase(); ul.textContent = '';
+      liveNotes().filter(n => n.id !== o.exclude && (!s || (n.title + ' ' + n.text).toLowerCase().includes(s))).sort((a, b) => b.updated - a.updated).slice(0, 40).forEach(n => {
+        const x = document.createElement('button'); x.className = 'btn pickrow'; x.textContent = n.title || 'Sans titre';
+        x.onclick = () => { dlg.close(); onPick(n); }; ul.append(x);
+      });
+      if (o.create && s && !findByTitle(q.value)){
+        const x = document.createElement('button'); x.className = 'btn pickrow'; x.textContent = '+ Créer la note « ' + q.value.trim() + ' »';
+        x.onclick = () => { dlg.close(); const n = newNote(); n.title = q.value.trim(); notes.unshift(n); saveNote(n); renderChips(); renderList(); onPick(n); };
+        ul.append(x);
+      }
+      if (!ul.children.length) ul.textContent = 'Aucune note.';
+    };
+    q.oninput = draw; draw(); setTimeout(() => q.focus(), 50);
+  }, [{label:'Annuler'}]);
+}
+$('#nlBtn').addEventListener('mousedown', e => e.preventDefault());
+$('#nlBtn').onclick = () => {
+  restoreSel();
+  const label = getSelection().toString().trim();
+  notePicker('Lien vers une note', n => insertNoteLink(n, label), {create:true});
+};
+
+/* barre sous les outils : tags de la note + rétroliens */
+function renderRefs(){
+  const bar = $('#refbar'); bar.textContent = '';
+  if (!cur){ bar.hidden = true; return; }
+  const tags = tagsOf(cur), back = liveNotes().filter(n => n.id !== cur.id && (n.html || '').includes('data-n="' + cur.id + '"'));
+  if (!tags.length && !back.length){ bar.hidden = true; }
+  else {
+    bar.hidden = false;
+    tags.forEach(t => {
+      const b = document.createElement('button'); b.className = 'chip sm'; b.textContent = '#' + t;
+      b.disabled = IS_PANE;
+      b.onclick = () => { commit(); view = 't:' + t; renderChips(); renderList(); document.body.classList.remove('view-edit'); document.body.classList.add('view-list'); };
+      bar.append(b);
+    });
+    if (back.length){
+      const l = document.createElement('span'); l.textContent = '↩ Mentionnée dans :'; bar.append(l);
+      back.slice(0, 8).forEach(n => {
+        const b = document.createElement('button'); b.className = 'chip sm'; b.textContent = n.title || 'Sans titre';
+        b.onclick = () => { if (IS_PANE) parent.postMessage({open:n.id}, location.origin); else openNote(n.id); };
+        bar.append(b);
+      });
+    }
+  }
+  if (!IS_PANE && tagList().join('|') !== tagSig) renderChips();
+}
+
+/* synchronisation entre éditeurs (fenêtre principale <-> note à côté) */
+const bc = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('mattnotes') : null;
+const bcSend = id => { try { bc && bc.postMessage({id}); } catch (e) {} };
+if (bc) bc.onmessage = async e => {
+  const id = e.data && e.data.id; if (!id || !db) return;
+  let r; try { r = await idb(store('notes', 'readonly').get(id)); } catch (x) { return; }
+  if (!r) return;
+  const n = Object.assign(newNote(), {fs:18}, r); if (!Array.isArray(n.objs)) n.objs = []; if (!Array.isArray(n.bgs)) n.bgs = [];
+  const i = notes.findIndex(x => x.id === id);
+  if (i >= 0 && notes[i].updated >= n.updated) return;
+  if (cur && cur.id === id){ notes[i] = n; openNote(id); return; }
+  if (i >= 0) notes[i] = n; else notes.push(n);
+  renderChips(); renderList(); renderRefs();
+};
+
+/* ---------- vue scindée : une 2e note modifiable à côté (iframe de l'appli elle-même) ---------- */
+let paneId = '', mainId = '', paneLoaded = false;
+const paneF = $('#paneF');
+const wide = () => matchMedia('(min-width:1000px) and (min-height:521px)').matches;
+const pageURL = () => location.href.split('#')[0].split('?')[0];
+
+function openInPane(id){
+  if (IS_PANE) return;
+  const n = findById(id); if (!n || n.purged || n.deleted) return;
+  if (!wide()){ toast('Écran trop étroit pour afficher deux notes côte à côte.'); return; }
+  if (cur && cur.id === id){ toast('Cette note est déjà ouverte ici.'); return; }
+  commit();
+  if (document.body.classList.contains('split') && paneLoaded) paneF.contentWindow.postMessage({open:id}, location.origin);
+  else { paneLoaded = false; paneF.src = pageURL() + '?pane=' + encodeURIComponent(id); document.body.classList.add('split'); }
+  paneId = id;
+}
+function closePane(){
+  if (!document.body.classList.contains('split')) return;
+  try { if (paneLoaded) paneF.contentWindow.postMessage({flush:1}, location.origin); } catch (e) {}
+  document.body.classList.remove('split'); paneId = ''; paneLoaded = false;
+  setTimeout(() => { if (!document.body.classList.contains('split')) paneF.src = 'about:blank'; }, 300);
+}
+function swapPane(){
+  if (!paneId || !paneLoaded) return;
+  const other = paneId, mine = cur ? cur.id : '';
+  commit(); paneF.contentWindow.postMessage({flush:1}, location.origin);
+  setTimeout(() => {
+    paneId = ''; openNote(other);
+    if (mine){ paneF.contentWindow.postMessage({open:mine}, location.origin); paneId = mine; } else closePane();
+  }, 300);
+}
+function syncPane(){
+  if (IS_PANE) parent.postMessage({pane:cur ? cur.id : ''}, location.origin);
+  else if (paneLoaded) paneF.contentWindow.postMessage({main:cur ? cur.id : ''}, location.origin);
+}
+addEventListener('message', e => {
+  if (e.origin !== location.origin) return;
+  const d = e.data || {};
+  if (IS_PANE){
+    if (d.main !== undefined) mainId = d.main;
+    if (d.open){ if (d.open === mainId) toast('Cette note est déjà ouverte à gauche.'); else openNote(d.open); }
+    if (d.flush) commit();
+  } else {
+    if (e.source !== paneF.contentWindow) return;
+    if (d.ready){ paneLoaded = true; syncPane(); }
+    if (d.pane !== undefined && d.pane) paneId = d.pane;
+    if (d.open) openNote(d.open);
+  }
+});
+if (!IS_PANE){
+  $('#paneX').onclick = closePane;
+  $('#paneSw').onclick = swapPane;
+  $('#splitBtn').onclick = () => { closeMenus(); notePicker('Ouvrir à côté', n => openInPane(n.id), {exclude:cur && cur.id}); };
+  addEventListener('resize', () => { if (!wide() && document.body.classList.contains('split')) closePane(); });
+}
+
 /* ---------- app installable (PWA) ---------- */
-if ('serviceWorker' in navigator && location.protocol !== 'file:') addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
-if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+if (!IS_PANE && 'serviceWorker' in navigator && location.protocol !== 'file:') addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+if (!IS_PANE && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 
 /* ---------- démarrage ---------- */
 (async () => {
@@ -2426,6 +2651,12 @@ if (navigator.storage && navigator.storage.persist) navigator.storage.persist().
     notes.forEach(n => { if (!Array.isArray(n.objs)) n.objs = []; if (!Array.isArray(n.bgs)) n.bgs = []; });
   } catch (e) { toast('Stockage local indisponible : les notes ne seront pas conservées.'); }
   markTools(); updateZoomUI();
+  if (IS_PANE){
+    const id = new URLSearchParams(location.search).get('pane');
+    if (notes.some(n => n.id === id && !n.purged && !n.deleted)) openNote(id);
+    parent.postMessage({ready:1}, location.origin);
+    return;
+  }
   autoPurge();
   renderChips();
   const live_ = notes.filter(n => !n.purged && !n.deleted);
