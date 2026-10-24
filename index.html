@@ -201,11 +201,16 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 #paneF{flex:1;border:0;width:100%;min-height:0;background:var(--bg)}
 body.split #app{grid-template-columns:260px 1fr 1fr}
 body.split #pane{display:flex}
+body.focus #app{grid-template-columns:1fr}
+body.focus.split #app{grid-template-columns:1fr 1fr}
+body.focus #side{display:none}
+body.pane #focusBtn{display:none}
 body.pane #app{grid-template-columns:1fr}
 body.pane #side,body.pane .only-mobile{display:none!important}
 body.pane #main{display:flex!important}
 @media (max-width:999px){body.split #pane{display:none}body.split #app{grid-template-columns:300px 1fr}}
 @media (max-width:760px),(max-height:520px){
+  .hide-narrow{display:none}
   #app{grid-template-columns:1fr}
   body.view-list #main{display:none}
   body.view-edit #side{display:none}
@@ -250,6 +255,7 @@ body.pane #main{display:flex!important}
           <button id="modeText" aria-pressed="true">Texte</button>
           <button id="modeDraw" aria-pressed="false">Dessin</button>
         </div>
+        <button id="focusBtn" class="ib hide-narrow" aria-label="Plein écran (Ctrl+Maj+F)" title="Plein écran (Ctrl+Maj+F)" aria-pressed="false"></button>
         <button id="menuBtn" class="ib" aria-label="Menu de la note" aria-haspopup="true"></button>
       </header>
 
@@ -2637,6 +2643,26 @@ if (!IS_PANE){
   $('#paneSw').onclick = swapPane;
   $('#splitBtn').onclick = () => { closeMenus(); notePicker('Ouvrir à côté', n => openInPane(n.id), {exclude:cur && cur.id}); };
   addEventListener('resize', () => { if (!wide() && document.body.classList.contains('split')) closePane(); });
+}
+
+/* ---------- plein écran : masque la liste, ne garde que la page ---------- */
+Object.assign(IC, {full:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>', fullOff:'<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>'});
+function setFocus(on){
+  document.body.classList.toggle('focus', on);
+  const b = $('#focusBtn'); b.setAttribute('aria-pressed', on); b.innerHTML = svg(on ? 'fullOff' : 'full');
+  try {
+    if (on && !document.fullscreenElement && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
+    if (!on && document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  } catch (e) {}
+}
+if (!IS_PANE){
+  setFocus(false);
+  $('#focusBtn').onclick = () => setFocus(!document.body.classList.contains('focus'));
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'f'){ e.preventDefault(); setFocus(!document.body.classList.contains('focus')); }
+    else if (e.key === 'Escape' && document.body.classList.contains('focus') && !dlg.open) setFocus(false);
+  });
+  document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && document.body.classList.contains('focus')) setFocus(false); });
 }
 
 /* ---------- app installable (PWA) ---------- */
